@@ -27,7 +27,7 @@
 
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-#include <sarasa_light7pt7b.h>
+#include "ArialNarrow7pt7b.h"
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 32 // OLED display height, in pixels
 // SDA SCL
@@ -36,8 +36,7 @@ TwoWire WireOLED(PB11, PB10);
 #define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &WireOLED, OLED_RESET);
 String OutputOLEDString;
-uint8_t CurrentInAcc, CurrentOutAcc;
-float efficiency;
+//float efficiency;
 
 CSPS PowerSupply_1(0x5F, 0x57, PB9, PB8);
 
@@ -59,7 +58,7 @@ void setup()
   Wire.setClock(100000);
 
   
-  display.setFont(&sarasa_light7pt7b);
+  display.setFont(&ArialNarrow7pt7b);
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
   if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println(F("SSD1306 allocation failed"));
@@ -70,7 +69,7 @@ void setup()
   
   if (displayInitialized)
   {
-    display.setTextSize(1);      // Normal 1:1 pixel scale
+    display.setTextSize(1);      // pixel scale
     display.setTextColor(SSD1306_WHITE); // Draw white text
     display.cp437(true);         // Use full 256 char 'Code Page 437' font
   }
@@ -117,16 +116,8 @@ void loop()
     display.clearDisplay();
     display.setCursor(0, 12);     // Start at top-left corner
     //display.println("I: 226V 268W 80%\nO: 12.23V 214.1W");
-    efficiency = PowerOut * 100 / PowerIn;
-    if (CurrentIn < 10)
-      CurrentInAcc = 2;
-    else
-      CurrentInAcc = 1;
-    if (CurrentOut < 10)
-      CurrentOutAcc = 1;
-    else
-      CurrentOutAcc = 0;
-    OutputOLEDString = "I: " + String(VoltIn, 0) + "V " + String(CurrentIn, CurrentInAcc) + "A " + String(PowerIn, 0) + "W\nO: " + String(VoltOut, 1) + "V " + String(CurrentOut, CurrentOutAcc) + "A " + String(PowerOut, 0) + "W";
+    //efficiency = PowerOut * 100 / PowerIn;
+    OutputOLEDString = " I : " + String(VoltIn, 0) + "V " + String(CurrentIn, 2) + "A " + String(PowerIn, 0) + "W\nO: " + String(VoltOut, 1) + "V " + String(CurrentOut, 1) + "A " + String(PowerOut, 0) + "W";
     display.println(OutputOLEDString);
     display.display();
   }
