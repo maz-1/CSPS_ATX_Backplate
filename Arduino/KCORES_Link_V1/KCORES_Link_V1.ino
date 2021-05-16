@@ -117,7 +117,7 @@ void loop()
     display.setCursor(0, 12);     // Start at top-left corner
     //display.println("I: 226V 268W 80%\nO: 12.23V 214.1W");
     efficiency = PowerOut * 100 / PowerIn;
-    OutputOLEDString = " I : " + String(VoltIn, 0) + "V " + String(CurrentIn, 2) + "A " + String(PowerIn, 0) + "W\nO: " + String(VoltOut, 1) + "V " + String(CurrentOut, 1) + "A " + String(PowerOut, 0) + "W";
+    OutputOLEDString = "I: " + String(VoltIn, 0) + "V " + String(CurrentIn, 2) + "A " + String(PowerIn, 0) + "W\nO: " + String(VoltOut, 1) + "V " + String(CurrentOut, 1) + "A " + String(PowerOut, 0) + "W";
     display.println(OutputOLEDString);
     display.display();
   }
