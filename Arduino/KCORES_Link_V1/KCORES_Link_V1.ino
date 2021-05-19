@@ -57,14 +57,13 @@ void setup()
   Serial.begin(115200);
   Wire.setClock(100000);
 
-  
+  displayInitialized = false;
   display.setFont(&ArialNarrow7pt7b);
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
-  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
-    Serial.println(F("SSD1306 allocation failed"));
-    displayInitialized = false;
-  } else {
+  if(display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     displayInitialized = true;
+  } else {
+    //Serial.println(F("SSD1306 allocation failed"));
   }
   
   if (displayInitialized)
@@ -72,6 +71,7 @@ void setup()
     display.setTextSize(1);      // pixel scale
     display.setTextColor(SSD1306_WHITE); // Draw white text
     display.cp437(true);         // Use full 256 char 'Code Page 437' font
+    display.setRotation(2);      // rotate screen
   }
   
 }

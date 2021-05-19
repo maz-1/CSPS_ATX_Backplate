@@ -54,6 +54,7 @@ byte CSPS::readROM(byte dataAddr)
   return rec;
 }
 
+
 uint32_t CSPS::readCSPSword(byte dataAddr)
 {
   byte regCS = ((0xFF - (dataAddr + (_CSPS_addr << 1))) + 1) & 0xFF;

@@ -1,6 +1,8 @@
 # 一个CSPS转ATX电源位的背板，相关项目： [KCORES-CSPS-to-ATX-Converter](https://github.com/KCORES/KCORES-CSPS-to-ATX-Converter)
 
-![CSPS to ATX Backplate](photo.jpg)
+![CSPS to ATX Backplate mounted](photo1.jpg)
+![CSPS to ATX Backplate detail1](photo2.jpg)
+![CSPS to ATX Backplate detail2](photo3.jpg)
 
 需要打印的部分 (建议用abs/尼龙以免高温变形)：
 - 
