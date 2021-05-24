@@ -17,4 +17,4 @@
 - 把固定件一和固定件二放到对应位置，用万能胶固定
 - 胶干了以后把把手螺丝拧到固定件螺丝孔位
 
-显示屏为ssd1306驱动的0.91寸128x32分辨率oled屏，用热熔胶固定到对应位置，单片机为stm32f103c8t6。程序及引脚接法见 [main.cpp](Arduino/KCORES_Link_V1/src/main.cpp)
+显示屏为ssd1306驱动的0.91寸128x32分辨率oled屏，用热熔胶固定到对应位置，单片机为stm32f103c8t6。程序及引脚接法见 [KCORES_Link_V1](Arduino/KCORES_Link_V1)
