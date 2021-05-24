@@ -1,3 +1,4 @@
+#include "Arduino.h"
 /*!
  * Work with KCORES Link V0.0.1 https://github.com/KCORES/kcores-link
  *
