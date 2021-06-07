@@ -4,7 +4,7 @@
 ![CSPS to ATX Backplate detail1](photo2.jpg)
 ![CSPS to ATX Backplate detail2](photo3.jpg)
 
-需要打印的部分 (建议用abs/尼龙以免高温变形)：
+需要打印的部分 (有条件的用abs/尼龙，petg也可，最好别用pla)：
 - 
 - STL/csps-atx-mount.stl （背板）
 - STL/reinforcement1.stl （固定件一）
