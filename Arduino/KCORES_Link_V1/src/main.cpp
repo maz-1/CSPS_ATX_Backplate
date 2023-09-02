@@ -30,7 +30,7 @@
 #include <Adafruit_SSD1306.h>
 #include "ArialNarrow7pt7b.h"
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 32 // OLED display height, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
 // SDA SCL
 TwoWire WireOLED(PB11, PB10);
 #define OLED_RESET     4 // Reset pin # (or -1 if sharing Arduino reset pin)
@@ -72,7 +72,16 @@ void setup()
     display.setTextSize(1);      // pixel scale
     display.setTextColor(SSD1306_WHITE); // Draw white text
     display.cp437(true);         // Use full 256 char 'Code Page 437' font
-    display.setRotation(2);      // rotate screen
+    // https://github.com/olikraus/u8g2/issues/1806
+    // https://www.buydisplay.com/download/ic/SSD1312_Datasheet.pdf Pg. 51 Section 2.1.19
+    //            normal    inverted
+    // normal     A1 C8       A0 C0
+    // mirrored   A0 C8       A1 C0
+    // combination1: A0 C8
+    // combination2: A1 C0
+    display.ssd1306_command(0xA0);
+    display.ssd1306_command(0xC8);
+    //display.setRotation(2);      // rotate screen
   }
   
 }
@@ -116,7 +125,7 @@ void loop()
   {
     display.clearDisplay();
     display.setCursor(0, 12);     // Start at top-left corner
-    //display.println("I: 226V 268W 80%\nO: 12.23V 214.1W");
+    //display.println("I: 226V 1A 226W\nO: 12.23V 17.5A 214.1W");
     //efficiency = PowerOut * 100 / PowerIn;
     OutputOLEDString = " I : " + String(VoltIn, 0) + "V " + String(CurrentIn, 2) + "A " + String(PowerIn, 0) + "W\nO: " + String(VoltOut, 1) + "V " + String(CurrentOut, 1) + "A " + String(PowerOut, 0) + "W";
     display.println(OutputOLEDString);
