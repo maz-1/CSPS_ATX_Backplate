@@ -8,6 +8,11 @@
  *
  */
 
+/*
+ * https://github.com/raplin/DPS-1200FB/blob/master/DPS-1200FB.py
+ */
+
+
 #ifndef KCORES_CSPS_H
 #define KCORES_CSPS_H
 
@@ -107,6 +112,11 @@ public:
   {
     return readCSPSword(0x30);
   };
+
+  uint32_t getFlags()
+  {
+    return readCSPSword(0x01);
+  }
 
   void setFanRPM(uint16_t rpm)
   {
