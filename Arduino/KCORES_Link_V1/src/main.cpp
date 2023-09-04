@@ -30,6 +30,7 @@
 #include <Adafruit_SSD1306.h>
 #include "ArialNarrow7pt7b.h"
 //#include "SourceHanMono_Regular7pt7b.h"
+//#include "FreeMonoBold7pt7b.h"
 #define DEFAULT_FONT ArialNarrow7pt7b
 #include "Digital_7pt7b.h"
 #include "BitmapFan.h"
@@ -126,23 +127,24 @@ void setup()
     //display.setRotation(2);      // rotate screen
     
     display.clearDisplay();
+    display.fillScreen(SSD1306_BLACK);
     // fixed content
     // header
     display.fillRect(0, 0, 80, 16, SSD1306_WHITE);
     // vlines
-    display.drawLine(0, 0, 0, 64, SSD1306_WHITE);
-    display.drawLine(40, 0, 40, 16, SSD1306_BLACK);
-    display.drawLine(40, 16, 40, 47, SSD1306_WHITE);
-    display.drawLine(80, 0, 80, 64, SSD1306_WHITE);
+    display.drawFastVLine(0, 0, 64, SSD1306_WHITE);
+    display.drawFastVLine(40, 0, 16, SSD1306_BLACK);
+    display.drawFastVLine(40, 16, 31, SSD1306_WHITE);
+    display.drawFastVLine(80, 0, 64, SSD1306_WHITE);
     // hlines
-    display.drawLine(0, 47, 80, 47, SSD1306_WHITE);
-    display.drawLine(0, 63, 80, 63, SSD1306_WHITE);
+    display.drawFastHLine(0, 47, 80, SSD1306_WHITE);
+    display.drawFastHLine(0, 63, 80, SSD1306_WHITE);
     // header text
     display.setTextColor(SSD1306_BLACK);
     display.setFont(&DEFAULT_FONT);
-    display.setCursor(10, 12);     // Start at top-left corner
+    display.setCursor(12, 12);     // Start at top-left corner
     display.print("AC");
-    display.setCursor(50, 12);
+    display.setCursor(52, 12);
     display.print("DC");
     // unit
     display.setTextColor(SSD1306_WHITE);
