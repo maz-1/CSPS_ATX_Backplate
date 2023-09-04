@@ -283,10 +283,11 @@ void update_oled_animation_frame()
 {
   display.fillRect(92, 16, 32, 32, SSD1306_BLACK);
   display.drawBitmap(92, 16, fan_bitmap_allArray[animation_frame], 32, 32, SSD1306_WHITE);
-  if (animation_frame)
+  animation_frame++;
+  if (animation_frame >= fan_bitmap_allArray_LEN)
+  {
     animation_frame = 0;
-  else
-    animation_frame = 1;
+  }
 }
 
 void loop()
