@@ -68,7 +68,7 @@ const float fan_speed_hbound = 10000;
 const float fan_speed_range = 9500;
 int animation_frame = 0;
 int animation_update_interval_idx = 0;
-float data_update_timestamp = 0;
+float data_update_timer = 0;
 
 void update_oled_pg(bool force)
 {
@@ -192,7 +192,7 @@ void test_csps_values()
   PowerOut = 1293.3;
   //Temp1 = PowerSupply_1.getTemp1();
   //Temp2 = PowerSupply_1.getTemp2();
-  FanSpeed = 7000;
+  FanSpeed = 12000;
   Efficiency = PowerOut * 100 / PowerIn;
   PowerGood = true;
 }
@@ -294,7 +294,8 @@ void update_oled_animation_frame()
 
 void loop()
 {
-  if (data_update_timestamp == 0)
+  unsigned long timeBegin = millis();
+  if (data_update_timer == 0)
   {
     //get_csps_values();
     test_csps_values();
@@ -305,15 +306,15 @@ void loop()
     }
     else if (FanSpeed >= fan_speed_hbound)
     {
-      animation_update_interval_idx = 9;
+      animation_update_interval_idx = animation_update_intervals_len - 1;
     }
     else
     {
-      animation_update_interval_idx = floor((FanSpeed - fan_speed_lbound) * 10.0 / fan_speed_range);
+      animation_update_interval_idx = floor((FanSpeed - fan_speed_lbound) * animation_update_intervals_len / fan_speed_range);
     }
   }
 
-  if (data_update_timestamp == 0)
+  if (data_update_timer == 0)
   {
     print_to_serial();
   }
@@ -321,7 +322,7 @@ void loop()
  
   if (displayInitialized)
   {
-    if (data_update_timestamp == 0)
+    if (data_update_timer == 0)
     {
       update_oled_values();
     }
@@ -330,11 +331,13 @@ void loop()
       
     display.display();
   }
-
-  data_update_timestamp += animation_update_intervals[animation_update_interval_idx];
-  if (abs(DATA_UPDATE_INTERVAL-data_update_timestamp) < 10)
-    data_update_timestamp = 0;
-  delay((int)animation_update_intervals[animation_update_interval_idx]);
+  
+  float delay_ms = animation_update_intervals[animation_update_interval_idx] - (float)(millis() - timeBegin);
+  data_update_timer += animation_update_intervals[animation_update_interval_idx];
+  if (abs(DATA_UPDATE_INTERVAL-data_update_timer) < 10)
+    data_update_timer = 0;
+  if (delay_ms > 0)
+    delay((int)delay_ms);
 }
 
 void serialEvent()
