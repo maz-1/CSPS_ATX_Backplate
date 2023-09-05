@@ -1,0 +1,47 @@
+// AUTOMATICALLY GENERATED FILE. PLEASE DO NOT MODIFY IT MANUALLY
+//
+// PIO Unified Debugger
+//
+// Documentation: https://docs.platformio.org/page/plus/debugging.html
+// Configuration: https://docs.platformio.org/page/projectconf/section_env_debug.html
+
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "platformio-debug",
+            "request": "launch",
+            "name": "PIO Debug",
+            "executable": "F:/SRC/CSPS_ATX_Backplate/Arduino/KCORES_Link_V1/.pio/build/bluepill_f103c8/firmware.elf",
+            "projectEnvName": "bluepill_f103c8",
+            "toolchainBinDir": "C:/Users/ling/.platformio/packages/toolchain-gccarmnoneeabi/bin",
+            "internalConsoleOptions": "openOnSessionStart",
+            "svdPath": "C:/Users/ling/.platformio/platforms/ststm32/misc/svd/STM32F103xx.svd",
+            "preLaunchTask": {
+                "type": "PlatformIO",
+                "task": "Pre-Debug"
+            }
+        },
+        {
+            "type": "platformio-debug",
+            "request": "launch",
+            "name": "PIO Debug (skip Pre-Debug)",
+            "executable": "F:/SRC/CSPS_ATX_Backplate/Arduino/KCORES_Link_V1/.pio/build/bluepill_f103c8/firmware.elf",
+            "projectEnvName": "bluepill_f103c8",
+            "toolchainBinDir": "C:/Users/ling/.platformio/packages/toolchain-gccarmnoneeabi/bin",
+            "internalConsoleOptions": "openOnSessionStart",
+            "svdPath": "C:/Users/ling/.platformio/platforms/ststm32/misc/svd/STM32F103xx.svd"
+        },
+        {
+            "type": "platformio-debug",
+            "request": "launch",
+            "name": "PIO Debug (without uploading)",
+            "executable": "F:/SRC/CSPS_ATX_Backplate/Arduino/KCORES_Link_V1/.pio/build/bluepill_f103c8/firmware.elf",
+            "projectEnvName": "bluepill_f103c8",
+            "toolchainBinDir": "C:/Users/ling/.platformio/packages/toolchain-gccarmnoneeabi/bin",
+            "internalConsoleOptions": "openOnSessionStart",
+            "svdPath": "C:/Users/ling/.platformio/platforms/ststm32/misc/svd/STM32F103xx.svd",
+            "loadMode": "manual"
+        }
+    ]
+}

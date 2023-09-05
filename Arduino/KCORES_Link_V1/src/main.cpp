@@ -42,7 +42,6 @@ TwoWire WireOLED(PB11, PB10);
 #define OLED_RESET     4 // Reset pin # (or -1 if sharing Arduino reset pin)
 #define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &WireOLED, OLED_RESET);
-String OutputOLEDString;
 
 CSPS PowerSupply_1(0x5F, 0x57, PB9, PB8);
 
@@ -178,6 +177,10 @@ void get_csps_values()
   Temp2 = PowerSupply_1.getTemp2();
   FanSpeed = PowerSupply_1.getFanRPM();
   Efficiency = PowerOut * 100 / PowerIn;
+  if (Efficiency >= 99)
+    Efficiency = 99;
+  else if (Efficiency < 0)
+    Efficiency = 0;
   // FIXME: should be decided by PowerSupply_1.getFlags()
   PowerGood = true;
 }
@@ -242,6 +245,11 @@ uint32_t digits10(uint64_t v) {
     return 12 + digits10(v / 1000000000000); // 10^12
 }
 
+float round_to(float value, float precision = 1.0)
+{
+    return std::round(value / precision) * precision;
+}
+
 void update_oled_values()
 {
   // dynamic data
@@ -249,34 +257,44 @@ void update_oled_values()
   display.setFont(&Digital_7pt7b);
   // AC info
   display.fillRect(1, 16, 30, 31, SSD1306_BLACK);
-  display.setCursor(2, 30);
-  display.print(String(VoltIn, 0));
+  if (VoltIn >= 0 && VoltIn < 999)
+  {
+    display.setCursor(2, 30);
+    display.print(String(round(VoltIn), 0));
+  }
   display.setCursor(2, 44);
-  if (CurrentIn >= 10)
-    display.print(String(CurrentIn, 1));
-  else
-    display.print(String(CurrentIn, 2));
+  if (CurrentIn >= 10 && CurrentIn <= 99)
+  {
+    display.print(String(round_to(CurrentIn, 0.1), 1));
+  }
+  else if (CurrentIn >= 0 && CurrentIn < 10)
+  {
+    display.print(String(round_to(CurrentIn, 0.01), 2));
+  }
   // DC info
   display.fillRect(41, 16, 30, 31, SSD1306_BLACK);
-  display.setCursor(42, 30);
-  display.print(String(VoltOut, 1));
+  if (VoltOut >= 0 && VoltOut < 99)
+  {
+    display.setCursor(42, 30);
+    display.print(String(round_to(VoltOut, 0.1), 1));
+  }
   display.setCursor(42, 44);
-  if (CurrentOut >= 100)
-    display.print(String(CurrentOut, 0));
-  else
-    display.print(String(CurrentOut, 1));
+  if (CurrentOut >= 100 && CurrentOut <= 999)
+    display.print(String(round(CurrentOut), 0));
+  else if (CurrentOut >= 0 && CurrentOut < 100)
+    display.print(String(round_to(CurrentOut, 0.1), 1));
   // PWR info
   display.setCursor(2, 61);
-  display.print(String(Efficiency, 0));
+  display.print(String(round(Efficiency), 0));
   display.fillRect(35, 48, 34, 13, SSD1306_BLACK);
   // display.setCursor(35, 61);
   display.setCursor(67 - 8*digits10((int)PowerOut), 61);
-  display.print(String(PowerOut, 0));
+  display.print(String(round(PowerOut), 0));
   // Fan info
   display.fillRect(81, 48, 48, 13, SSD1306_BLACK);
   //display.setCursor(81, 61);
   display.setCursor(105-(digits10((int)FanSpeed)+1)*8/2, 61);
-  display.print(String(FanSpeed, 0)+ "R");
+  display.print(String(round(FanSpeed), 0)+ "R");
   // On/Off
   update_oled_pg(false);
 }
