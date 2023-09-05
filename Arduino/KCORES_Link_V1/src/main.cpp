@@ -25,6 +25,8 @@
 
 #include "KCORES_CSPS.h"
 
+//#define _TASK_THREAD_SAFE
+#include <TaskScheduler.h>
 
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
@@ -66,8 +68,107 @@ const float fan_speed_lbound = 500;
 const float fan_speed_hbound = 10000;
 const float fan_speed_range = 9500;
 int animation_frame = 0;
-int animation_update_interval_idx = 0;
-float data_update_timer = 0;
+//int animation_update_interval_idx = 0;
+Scheduler ts;
+
+//float data_update_timer = 0;
+
+void get_csps_values()
+{
+  float _VoltIn = PowerSupply_1.getInputVoltage();
+  float _VoltOut = PowerSupply_1.getOutputVoltage();
+  float _CurrentIn = PowerSupply_1.getInputCurrent();
+  float _CurrentOut = PowerSupply_1.getOutputCurrent();
+  float _PowerIn = PowerSupply_1.getInputPower();
+  float _PowerOut = PowerSupply_1.getOutputPower();
+  float _Temp1 = PowerSupply_1.getTemp1();
+  float _Temp2 = PowerSupply_1.getTemp2();
+  float _FanSpeed = PowerSupply_1.getFanRPM();
+  float _Efficiency = PowerOut * 100 / PowerIn;
+  if (Efficiency >= 99)
+    _Efficiency = 99;
+  else if (Efficiency < 0)
+    _Efficiency = 0;
+  // FIXME: should be decided by PowerSupply_1.getFlags()
+  bool _PowerGood = true;
+  // FIXME: add mutex
+  VoltIn = _VoltIn;
+  VoltOut = _VoltOut;
+  CurrentIn = _CurrentIn;
+  CurrentOut = _CurrentOut;
+  PowerIn = _PowerIn;
+  PowerOut = _PowerOut;
+  Temp1 = _Temp1;
+  Temp2 = _Temp2;
+  FanSpeed = _FanSpeed;
+  Efficiency = _Efficiency;
+  PowerGood = _PowerGood;
+}
+
+void test_csps_values()
+{
+  VoltIn = 226.23;
+  VoltOut = 12.21;
+  CurrentIn = 6.11;
+  CurrentOut = 106.01;
+  PowerIn = 1347.2;
+  PowerOut = 1293.3;
+  //Temp1 = PowerSupply_1.getTemp1();
+  //Temp2 = PowerSupply_1.getTemp2();
+  FanSpeed = 12000;
+  Efficiency = PowerOut * 100 / PowerIn;
+  PowerGood = true;
+}
+
+void print_to_serial()
+{
+  Serial.print(" ");
+  OutputLen = 0;
+  OutputString = String(VoltIn, 1) + ',' + String(CurrentIn, 2) + ',' + String(PowerIn, 1) + ',';
+  OutputLen += OutputString.length();
+  Serial.print(OutputString);
+
+  OutputString = String(VoltOut, 2) + ',' + String(CurrentOut, 2) + ',' + String(PowerOut, 1) + ',';
+  OutputLen += OutputString.length();
+  Serial.print(OutputString);
+
+  OutputString = String(Temp1, 1) + ',' + String(Temp2, 1) + ',' + String(FanSpeed, 0) + ',';
+  OutputLen += OutputString.length();
+  Serial.print(OutputString);
+  Serial.print(",,");
+
+  OutputLen = 59 - OutputLen;
+
+  for (; OutputLen > 0; OutputLen--)
+    Serial.print(" ");
+
+  Serial.print("\n");
+}
+
+uint32_t digits10(uint64_t v) {
+    if (v < 10) return 1;
+    if (v < 100) return 2;
+    if (v < 1000) return 3;
+    if (v < 1000000000000) {    // 10^12
+        if (v < 100000000) {    // 10^8
+            if (v < 1000000) {  // 10^6
+                if (v < 10000) return 4;
+                return 5 + (v >= 100000); // 10^5
+            }
+            return 7 + (v >= 10000000); // 10^7
+        }
+        if (v < 10000000000) {  // 10^10
+            return 9 + (v >= 1000000000); // 10^9
+        }
+        return 11 + (v >= 100000000000); // 10^11
+    }
+    return 12 + digits10(v / 1000000000000); // 10^12
+}
+
+float round_to(float value, float precision = 1.0)
+{
+    return std::round(value / precision) * precision;
+}
 
 void update_oled_pg(bool force)
 {
@@ -92,6 +193,66 @@ void update_oled_pg(bool force)
     display.print("OFF");
   }
   PowerGoodOled = PowerGood;
+}
+
+void update_oled_values()
+{
+  // dynamic data
+  display.setTextColor(SSD1306_WHITE);
+  display.setFont(&Digital_7pt7b);
+  // AC info
+  display.fillRect(1, 16, 30, 31, SSD1306_BLACK);
+  if (VoltIn >= 0 && VoltIn < 999)
+  {
+    display.setCursor(2, 30);
+    display.print(String(round(VoltIn), 0));
+  }
+  display.setCursor(2, 44);
+  if (CurrentIn >= 10 && CurrentIn <= 99)
+  {
+    display.print(String(round_to(CurrentIn, 0.1), 1));
+  }
+  else if (CurrentIn >= 0 && CurrentIn < 10)
+  {
+    display.print(String(round_to(CurrentIn, 0.01), 2));
+  }
+  // DC info
+  display.fillRect(41, 16, 30, 31, SSD1306_BLACK);
+  if (VoltOut >= 0 && VoltOut < 99)
+  {
+    display.setCursor(42, 30);
+    display.print(String(round_to(VoltOut, 0.1), 1));
+  }
+  display.setCursor(42, 44);
+  if (CurrentOut >= 100 && CurrentOut <= 999)
+    display.print(String(round(CurrentOut), 0));
+  else if (CurrentOut >= 0 && CurrentOut < 100)
+    display.print(String(round_to(CurrentOut, 0.1), 1));
+  // PWR info
+  display.setCursor(2, 61);
+  display.print(String(round(Efficiency), 0));
+  display.fillRect(35, 48, 34, 13, SSD1306_BLACK);
+  // display.setCursor(35, 61);
+  display.setCursor(67 - 8*digits10((int)PowerOut), 61);
+  display.print(String(round(PowerOut), 0));
+  // Fan info
+  display.fillRect(81, 48, 48, 13, SSD1306_BLACK);
+  //display.setCursor(81, 61);
+  display.setCursor(105-(digits10((int)FanSpeed)+1)*8/2, 61);
+  display.print(String(round(FanSpeed), 0)+ "R");
+  // On/Off
+  update_oled_pg(false);
+}
+
+void update_oled_animation_frame()
+{
+  display.fillRect(92, 16, 32, 32, SSD1306_BLACK);
+  display.drawBitmap(92, 16, fan_bitmap_allArray[animation_frame], 32, 32, SSD1306_WHITE);
+  animation_frame++;
+  if (animation_frame >= fan_bitmap_allArray_LEN)
+  {
+    animation_frame = 0;
+  }
 }
 
 void setup()
@@ -161,155 +322,55 @@ void setup()
     display.print("W");
     // pg
     update_oled_pg(true);
+    // tasks
+    ts.startNow();
   }
-  
 }
 
-void get_csps_values()
+void update_oled();
+void get_csps_values_and_print();
+
+Task task_read_pmbus(500, TASK_FOREVER, &get_csps_values_and_print, &ts, true);
+
+void get_csps_values_and_print()
 {
-  VoltIn = PowerSupply_1.getInputVoltage();
-  VoltOut = PowerSupply_1.getOutputVoltage();
-  CurrentIn = PowerSupply_1.getInputCurrent();
-  CurrentOut = PowerSupply_1.getOutputCurrent();
-  PowerIn = PowerSupply_1.getInputPower();
-  PowerOut = PowerSupply_1.getOutputPower();
-  Temp1 = PowerSupply_1.getTemp1();
-  Temp2 = PowerSupply_1.getTemp2();
-  FanSpeed = PowerSupply_1.getFanRPM();
-  Efficiency = PowerOut * 100 / PowerIn;
-  if (Efficiency >= 99)
-    Efficiency = 99;
-  else if (Efficiency < 0)
-    Efficiency = 0;
-  // FIXME: should be decided by PowerSupply_1.getFlags()
-  PowerGood = true;
+  //get_csps_values();
+  test_csps_values();
+  print_to_serial();
 }
 
-void test_csps_values()
+Task task_update_oled(animation_update_intervals[0], TASK_FOREVER, &update_oled, &ts, true);
+
+void update_oled()
 {
-  VoltIn = 226.23;
-  VoltOut = 12.21;
-  CurrentIn = 6.11;
-  CurrentOut = 106.01;
-  PowerIn = 1347.2;
-  PowerOut = 1293.3;
-  //Temp1 = PowerSupply_1.getTemp1();
-  //Temp2 = PowerSupply_1.getTemp2();
-  FanSpeed = 12000;
-  Efficiency = PowerOut * 100 / PowerIn;
-  PowerGood = true;
-}
-
-void print_to_serial()
-{
-  Serial.print(" ");
-  OutputLen = 0;
-  OutputString = String(VoltIn, 1) + ',' + String(CurrentIn, 2) + ',' + String(PowerIn, 1) + ',';
-  OutputLen += OutputString.length();
-  Serial.print(OutputString);
-
-  OutputString = String(VoltOut, 2) + ',' + String(CurrentOut, 2) + ',' + String(PowerOut, 1) + ',';
-  OutputLen += OutputString.length();
-  Serial.print(OutputString);
-
-  OutputString = String(Temp1, 1) + ',' + String(Temp2, 1) + ',' + String(FanSpeed, 0) + ',';
-  OutputLen += OutputString.length();
-  Serial.print(OutputString);
-  Serial.print(",,");
-
-  OutputLen = 59 - OutputLen;
-
-  for (; OutputLen > 0; OutputLen--)
-    Serial.print(" ");
-
-  Serial.print("\n");
-}
-
-uint32_t digits10(uint64_t v) {
-    if (v < 10) return 1;
-    if (v < 100) return 2;
-    if (v < 1000) return 3;
-    if (v < 1000000000000) {    // 10^12
-        if (v < 100000000) {    // 10^8
-            if (v < 1000000) {  // 10^6
-                if (v < 10000) return 4;
-                return 5 + (v >= 100000); // 10^5
-            }
-            return 7 + (v >= 10000000); // 10^7
-        }
-        if (v < 10000000000) {  // 10^10
-            return 9 + (v >= 1000000000); // 10^9
-        }
-        return 11 + (v >= 100000000000); // 10^11
-    }
-    return 12 + digits10(v / 1000000000000); // 10^12
-}
-
-float round_to(float value, float precision = 1.0)
-{
-    return std::round(value / precision) * precision;
-}
-
-void update_oled_values()
-{
-  // dynamic data
-  display.setTextColor(SSD1306_WHITE);
-  display.setFont(&Digital_7pt7b);
-  // AC info
-  display.fillRect(1, 16, 30, 31, SSD1306_BLACK);
-  if (VoltIn >= 0 && VoltIn < 999)
+  if (FanSpeed <= fan_speed_lbound)
   {
-    display.setCursor(2, 30);
-    display.print(String(round(VoltIn), 0));
+    task_update_oled.setInterval(animation_update_intervals[0]);
   }
-  display.setCursor(2, 44);
-  if (CurrentIn >= 10 && CurrentIn <= 99)
+  else if (FanSpeed >= fan_speed_hbound)
   {
-    display.print(String(round_to(CurrentIn, 0.1), 1));
+    task_update_oled.setInterval(animation_update_intervals[animation_update_intervals_len - 1]);
   }
-  else if (CurrentIn >= 0 && CurrentIn < 10)
+  else
   {
-    display.print(String(round_to(CurrentIn, 0.01), 2));
+    task_update_oled.setInterval(animation_update_intervals[(int)floor((FanSpeed - fan_speed_lbound) * animation_update_intervals_len / fan_speed_range)]);
   }
-  // DC info
-  display.fillRect(41, 16, 30, 31, SSD1306_BLACK);
-  if (VoltOut >= 0 && VoltOut < 99)
+  if (displayInitialized)
   {
-    display.setCursor(42, 30);
-    display.print(String(round_to(VoltOut, 0.1), 1));
+    update_oled_values();
+    // Fan anim
+    update_oled_animation_frame();
+      
+    display.display();
   }
-  display.setCursor(42, 44);
-  if (CurrentOut >= 100 && CurrentOut <= 999)
-    display.print(String(round(CurrentOut), 0));
-  else if (CurrentOut >= 0 && CurrentOut < 100)
-    display.print(String(round_to(CurrentOut, 0.1), 1));
-  // PWR info
-  display.setCursor(2, 61);
-  display.print(String(round(Efficiency), 0));
-  display.fillRect(35, 48, 34, 13, SSD1306_BLACK);
-  // display.setCursor(35, 61);
-  display.setCursor(67 - 8*digits10((int)PowerOut), 61);
-  display.print(String(round(PowerOut), 0));
-  // Fan info
-  display.fillRect(81, 48, 48, 13, SSD1306_BLACK);
-  //display.setCursor(81, 61);
-  display.setCursor(105-(digits10((int)FanSpeed)+1)*8/2, 61);
-  display.print(String(round(FanSpeed), 0)+ "R");
-  // On/Off
-  update_oled_pg(false);
 }
 
-void update_oled_animation_frame()
+void loop()
 {
-  display.fillRect(92, 16, 32, 32, SSD1306_BLACK);
-  display.drawBitmap(92, 16, fan_bitmap_allArray[animation_frame], 32, 32, SSD1306_WHITE);
-  animation_frame++;
-  if (animation_frame >= fan_bitmap_allArray_LEN)
-  {
-    animation_frame = 0;
-  }
+  ts.execute();
 }
 
+/*
 void loop()
 {
   unsigned long timeBegin = millis();
@@ -357,6 +418,7 @@ void loop()
   if (delay_ms > 0)
     delay((int)delay_ms);
 }
+*/
 
 void serialEvent()
 {

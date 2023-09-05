@@ -8,6 +8,7 @@
         "string_view": "cpp",
         "initializer_list": "cpp",
         "ranges": "cpp",
-        "cmath": "cpp"
+        "cmath": "cpp",
+        "mutex": "cpp"
     }
 }
