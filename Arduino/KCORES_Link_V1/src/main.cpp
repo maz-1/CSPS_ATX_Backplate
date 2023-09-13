@@ -60,6 +60,9 @@ uint8_t OutputLen = 0;
 
 bool displayInitialized;
 
+uint8_t led_state = LOW;
+uint8_t led_blink_cnt = 0;
+
 const float animation_update_intervals[] = {500, 250, 166.66, 125, 100, 83.33, 71.43, 62.5, 55.55, 50};
 const int animation_update_intervals_len = 10;
 const float fan_speed_lbound = 500;
@@ -161,14 +164,16 @@ void setup()
     // pg
     update_powergood_display(true);
   }
-  
+  // initialize digital pin LED_BUILTIN as an output.
+  pinMode(LED_BUILTIN, OUTPUT);
 }
 
 void get_csps_values()
 {
   if (!PowerSupply_1.available())
   {
-    PowerSupply_1.begin();
+    //Serial.println(F("Reset PMBUS"));
+    PowerSupply_1.reset();
   }
   VoltIn = PowerSupply_1.getInputVoltage();
   VoltOut = PowerSupply_1.getOutputVoltage();
@@ -325,7 +330,7 @@ void loop()
 
   if (data_update_timer == 0)
   {
-    //if (Serial && Serial.available() > 0)
+    //if (Serial && Serial.available())
       print_to_serial();
   }
 
@@ -348,6 +353,18 @@ void loop()
     data_update_timer = 0;
   if (delay_ms > 0)
     delay((int)delay_ms);
+  // turn off onboard led after blink 5 times
+  if (led_blink_cnt < 10)
+  {
+    led_state = !led_state;
+    digitalWrite(LED_BUILTIN, led_state);
+    if (displayInitialized)
+      led_blink_cnt++;
+  }
+  else
+  {
+    digitalWrite(LED_BUILTIN, HIGH);
+  }
 }
 
 void serialEvent()
