@@ -22,9 +22,9 @@
  *   G    -> 12832 GND
  */
 
+#define SERIAL_BAUDRATE 115200
 
 #include "KCORES_CSPS.h"
-
 
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
@@ -48,12 +48,12 @@ CSPS PowerSupply_1(0x5F, 0x57, PB9, PB8);
 float VoltIn, VoltOut,
     CurrentIn, CurrentOut,
     PowerIn, PowerOut,
-    Temp1,
-    Temp2,
     FanSpeed;
+float Temp1, Temp2;
 float Efficiency;
-bool PowerGood;
-bool PowerGoodOled;
+uint32_t Flags;
+uint32_t PowerGood;
+uint32_t PowerGoodDisplay;
 
 String OutputString;
 uint8_t OutputLen = 0;
@@ -69,9 +69,9 @@ int animation_frame = 0;
 int animation_update_interval_idx = 0;
 float data_update_timer = 0;
 
-void update_oled_pg(bool force)
+void update_powergood_display(bool force)
 {
-  if (PowerGoodOled == PowerGood && !force)
+  if (PowerGoodDisplay == PowerGood && !force)
   {
     return;
   }
@@ -91,12 +91,12 @@ void update_oled_pg(bool force)
     display.setCursor(96, 11);
     display.print("OFF");
   }
-  PowerGoodOled = PowerGood;
+  PowerGoodDisplay = PowerGood;
 }
 
 void setup()
 {
-  Serial.begin(115200);
+  Serial.begin(SERIAL_BAUDRATE);
   Wire.setClock(100000);
 
   displayInitialized = false;
@@ -120,12 +120,11 @@ void setup()
   
   if (displayInitialized)
   {
+    display.clearDisplay();
     display.setTextSize(1);      // pixel scale
     //display.setTextColor(SSD1306_WHITE); // Draw white text
     display.cp437(true);         // Use full 256 char 'Code Page 437' font
     //display.setRotation(2);      // rotate screen
-    
-    display.clearDisplay();
     display.fillScreen(SSD1306_BLACK);
     // fixed content
     // header
@@ -160,13 +159,17 @@ void setup()
     display.setCursor(70, 60);
     display.print("W");
     // pg
-    update_oled_pg(true);
+    update_powergood_display(true);
   }
   
 }
 
 void get_csps_values()
 {
+  if (!PowerSupply_1.available())
+  {
+    PowerSupply_1.begin();
+  }
   VoltIn = PowerSupply_1.getInputVoltage();
   VoltOut = PowerSupply_1.getOutputVoltage();
   CurrentIn = PowerSupply_1.getInputCurrent();
@@ -181,23 +184,11 @@ void get_csps_values()
     Efficiency = 99;
   else if (Efficiency < 0)
     Efficiency = 0;
-  // FIXME: should be decided by PowerSupply_1.getFlags()
-  PowerGood = true;
-}
-
-void test_csps_values()
-{
-  VoltIn = 226.23;
-  VoltOut = 12.21;
-  CurrentIn = 6.11;
-  CurrentOut = 106.01;
-  PowerIn = 1347.2;
-  PowerOut = 1293.3;
-  //Temp1 = PowerSupply_1.getTemp1();
-  //Temp2 = PowerSupply_1.getTemp2();
-  FanSpeed = 12000;
-  Efficiency = PowerOut * 100 / PowerIn;
-  PowerGood = true;
+  Flags = PowerSupply_1.getFlags();
+  // FIXME: not sure which bit matters
+  // Power Off: 0011 0001 0010
+  // Power On:  0011 0001 0111
+  PowerGood = Flags & 0b0101;
 }
 
 void print_to_serial()
@@ -284,10 +275,11 @@ void update_oled_values()
   else if (CurrentOut >= 0 && CurrentOut < 100)
     display.print(String(round_to(CurrentOut, 0.1), 1));
   // PWR info
+  display.fillRect(2, 48, 15, 13, SSD1306_BLACK);
   display.setCursor(2, 61);
   display.print(String(round(Efficiency), 0));
-  display.fillRect(35, 48, 34, 13, SSD1306_BLACK);
-  // display.setCursor(35, 61);
+  display.fillRect(35, 48, 36, 13, SSD1306_BLACK);
+  //display.setCursor(35, 61);
   display.setCursor(67 - 8*digits10((int)PowerOut), 61);
   display.print(String(round(PowerOut), 0));
   // Fan info
@@ -296,7 +288,7 @@ void update_oled_values()
   display.setCursor(105-(digits10((int)FanSpeed)+1)*8/2, 61);
   display.print(String(round(FanSpeed), 0)+ "R");
   // On/Off
-  update_oled_pg(false);
+  update_powergood_display(false);
 }
 
 void update_oled_animation_frame()
@@ -315,8 +307,7 @@ void loop()
   unsigned long timeBegin = millis();
   if (data_update_timer == 0)
   {
-    //get_csps_values();
-    test_csps_values();
+    get_csps_values();
     // update animation speed
     if (FanSpeed <= fan_speed_lbound)
     {
@@ -334,7 +325,8 @@ void loop()
 
   if (data_update_timer == 0)
   {
-    print_to_serial();
+    //if (Serial && Serial.available() > 0)
+      print_to_serial();
   }
 
  

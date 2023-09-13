@@ -20,18 +20,41 @@ CSPS::CSPS(byte CSPS_addr, uint8_t sda, uint8_t scl)
 {
   _CSPS_addr = CSPS_addr;
   _ROM_addr = CSPS_addr - 8;
-  WIRE.setSDA(sda);
-  WIRE.setSCL(scl);
-  WIRE.begin();
+  _sda = sda;
+  _scl = scl;
+  this->begin();
 }
 
 CSPS::CSPS(byte CSPS_addr, byte ROM_addr, uint8_t sda, uint8_t scl)
 {
   _CSPS_addr = CSPS_addr;
   _ROM_addr = ROM_addr;
-  WIRE.setSDA(sda);
-  WIRE.setSCL(scl);
+  _sda = sda;
+  _scl = scl;
+  this->begin();
+}
+
+int CSPS::available()
+{
+  return WIRE.available();
+}
+
+void CSPS::begin()
+{
+  WIRE.setSDA(_sda);
+  WIRE.setSCL(_scl);
   WIRE.begin();
+}
+
+void CSPS::end()
+{
+  WIRE.end();
+}
+
+void CSPS::reset()
+{
+  this->end();
+  this->begin();
 }
 
 String CSPS::getROM(byte addr, byte len)

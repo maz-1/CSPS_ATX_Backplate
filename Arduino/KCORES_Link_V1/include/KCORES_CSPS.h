@@ -25,6 +25,11 @@ public:
   CSPS(byte CSPS_addr, uint8_t sda, uint8_t scl);
   CSPS(byte CSPS_addr, byte ROM_addr, uint8_t sda, uint8_t scl);
 
+  int available();
+  void begin();
+  void end();
+  void reset();
+
   String getROM(byte addr, byte len);
 
   //Spare Part No
@@ -115,7 +120,7 @@ public:
 
   uint32_t getFlags()
   {
-    return readCSPSword(0x01);
+    return readCSPSword(0x02);
   }
 
   void setFanRPM(uint16_t rpm)
@@ -126,6 +131,8 @@ public:
 private:
   byte _CSPS_addr;
   byte _ROM_addr;
+  uint8_t _sda;
+  uint8_t _scl;
   byte readROM(byte dataAddr);
 
   uint32_t readCSPSword(byte dataAddr);
