@@ -97,6 +97,15 @@ void update_powergood_display(bool force)
   PowerGoodDisplay = PowerGood;
 }
 
+//uint8_t _contrast = 1;
+// set brightness: 0x00 ~ 0xFF
+// typical values: 0x01 0x3F 0xAF 0xFF
+void set_oled_contrast(uint8_t contrast)
+{
+  display.ssd1306_command(SSD1306_SETCONTRAST);
+  display.ssd1306_command(contrast);
+}
+
 void setup()
 {
   Serial.begin(SERIAL_BAUDRATE);
@@ -114,8 +123,12 @@ void setup()
     // mirrored   A0 C8       A1 C0
     // combination1: A0 C8
     // combination2: A1 C0
-    display.ssd1306_command(0xA0);
-    display.ssd1306_command(0xC8);
+    display.ssd1306_command(0xA1);
+    display.ssd1306_command(0xC0);
+
+    // set brightness
+    set_oled_contrast(0x3F);
+
     displayInitialized = true;
   } else {
     //Serial.println(F("SSD1306 allocation failed"));
@@ -337,6 +350,18 @@ void loop()
  
   if (displayInitialized)
   {
+    // test set_oled_contrast()
+    /*
+    if (_contrast <= 0xff)
+    {
+      set_oled_contrast(_contrast);
+      display.fillRoundRect(92, 0, 32, 14, 4, SSD1306_WHITE);
+      display.setTextColor(SSD1306_BLACK);
+      display.setCursor(99, 11);
+      display.printf("%x", _contrast);
+      _contrast++;
+    }
+    */
     if (data_update_timer == 0)
     {
       update_oled_values();
