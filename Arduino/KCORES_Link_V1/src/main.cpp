@@ -114,8 +114,8 @@ void setup()
     // mirrored   A0 C8       A1 C0
     // combination1: A0 C8
     // combination2: A1 C0
-    display.ssd1306_command(0xA1);
-    display.ssd1306_command(0xC0);
+    display.ssd1306_command(0xA0);
+    display.ssd1306_command(0xC8);
     displayInitialized = true;
   } else {
     //Serial.println(F("SSD1306 allocation failed"));
