@@ -26,6 +26,9 @@
 
 #include "KCORES_CSPS.h"
 
+#include <CircularBuffer.h>
+#include <MicroTuple.h>
+
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include "ArialNarrow7pt7b.h"
@@ -54,6 +57,9 @@ float Efficiency;
 uint32_t Flags;
 uint32_t PowerGood;
 uint32_t PowerGoodDisplay;
+CircularBuffer<float,10> PowerInBuffer;
+CircularBuffer<float,10> PowerOutBuffer;
+CircularBuffer<MicroTuple<float, float>,10> PowerBuffer;
 
 String OutputString;
 uint8_t OutputLen = 0;
@@ -197,11 +203,16 @@ void get_csps_values()
   Temp1 = PowerSupply_1.getTemp1();
   Temp2 = PowerSupply_1.getTemp2();
   FanSpeed = PowerSupply_1.getFanRPM();
-  Efficiency = PowerOut * 100 / PowerIn;
+  PowerBuffer.push(MicroTuple<float, float>(PowerIn, PowerOut));
+  float PowerInBufferSum = 0;
+  float PowerOutBufferSum = 0;
+  for (decltype(PowerBuffer)::index_t i = 0; i < PowerBuffer.size(); i++) {
+    PowerInBufferSum += PowerBuffer[i].get<0>();
+    PowerOutBufferSum += PowerBuffer[i].get<1>();
+  }
+  Efficiency = PowerOutBufferSum * 100 / PowerInBufferSum;
   if (Efficiency >= 99)
     Efficiency = 99;
-  else if (Efficiency < 0)
-    Efficiency = 0;
   Flags = PowerSupply_1.getFlags();
   // FIXME: not sure which bit matters
   // Power Off: 0011 0001 0010
@@ -322,7 +333,7 @@ void update_oled_animation_frame()
 
 void loop()
 {
-  unsigned long timeBegin = millis();
+  auto timeBegin = millis();
   if (data_update_timer == 0)
   {
     get_csps_values();
@@ -377,7 +388,7 @@ void loop()
   if (abs(DATA_UPDATE_INTERVAL-data_update_timer) < 10)
     data_update_timer = 0;
   if (delay_ms > 0)
-    delay((int)delay_ms);
+    delay((uint32_t)delay_ms);
   // turn off onboard led after blink 5 times
   if (led_blink_cnt < 10)
   {

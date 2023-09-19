@@ -10,6 +10,8 @@
             "includePath": [
                 "F:/SRC/CSPS_ATX_Backplate/Arduino/KCORES_Link_V1/include",
                 "F:/SRC/CSPS_ATX_Backplate/Arduino/KCORES_Link_V1/src",
+                "F:/SRC/CSPS_ATX_Backplate/Arduino/KCORES_Link_V1/.pio/libdeps/bluepill_f103c8/MicroTuple",
+                "F:/SRC/CSPS_ATX_Backplate/Arduino/KCORES_Link_V1/.pio/libdeps/bluepill_f103c8/CircularBuffer",
                 "F:/SRC/CSPS_ATX_Backplate/Arduino/KCORES_Link_V1/.pio/libdeps/bluepill_f103c8/Adafruit SSD1306",
                 "F:/SRC/CSPS_ATX_Backplate/Arduino/KCORES_Link_V1/.pio/libdeps/bluepill_f103c8/Adafruit GFX Library",
                 "F:/SRC/CSPS_ATX_Backplate/Arduino/KCORES_Link_V1/.pio/libdeps/bluepill_f103c8/Adafruit BusIO",
@@ -55,6 +57,8 @@
                 "path": [
                     "F:/SRC/CSPS_ATX_Backplate/Arduino/KCORES_Link_V1/include",
                     "F:/SRC/CSPS_ATX_Backplate/Arduino/KCORES_Link_V1/src",
+                    "F:/SRC/CSPS_ATX_Backplate/Arduino/KCORES_Link_V1/.pio/libdeps/bluepill_f103c8/MicroTuple",
+                    "F:/SRC/CSPS_ATX_Backplate/Arduino/KCORES_Link_V1/.pio/libdeps/bluepill_f103c8/CircularBuffer",
                     "F:/SRC/CSPS_ATX_Backplate/Arduino/KCORES_Link_V1/.pio/libdeps/bluepill_f103c8/Adafruit SSD1306",
                     "F:/SRC/CSPS_ATX_Backplate/Arduino/KCORES_Link_V1/.pio/libdeps/bluepill_f103c8/Adafruit GFX Library",
                     "F:/SRC/CSPS_ATX_Backplate/Arduino/KCORES_Link_V1/.pio/libdeps/bluepill_f103c8/Adafruit BusIO",
