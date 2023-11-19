@@ -24,6 +24,15 @@
 
 #define SERIAL_BAUDRATE 115200
 
+#define PREVENT_OLED_BURNIN
+#define PREVENT_OLED_BURNIN_PERIOD 3600000
+//#define PREVENT_OLED_BURNIN_PERIOD 10000
+
+#ifdef PREVENT_OLED_BURNIN
+  bool display_inverted = false;
+  float display_invert_timer = 0;
+#endif
+
 #include "KCORES_CSPS.h"
 
 #include <CircularBuffer.h>
@@ -112,6 +121,44 @@ void set_oled_contrast(uint8_t contrast)
   display.ssd1306_command(contrast);
 }
 
+void draw_fixed_content()
+{
+  display.fillScreen(SSD1306_BLACK);
+  // header
+  display.fillRect(0, 0, 80, 16, SSD1306_WHITE);
+  // vlines
+  display.drawFastVLine(0, 0, 64, SSD1306_WHITE);
+  display.drawFastVLine(40, 0, 16, SSD1306_BLACK);
+  display.drawFastVLine(40, 16, 31, SSD1306_WHITE);
+  display.drawFastVLine(80, 0, 64, SSD1306_WHITE);
+  // hlines
+  display.drawFastHLine(0, 47, 80, SSD1306_WHITE);
+  display.drawFastHLine(0, 63, 80, SSD1306_WHITE);
+  // header text
+  display.setTextColor(SSD1306_BLACK);
+  display.setFont(&DEFAULT_FONT);
+  display.setCursor(12, 12);     // Start at top-left corner
+  display.print("AC");
+  display.setCursor(52, 12);
+  display.print("DC");
+  // unit
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(31, 28);
+  display.print("V");
+  display.setCursor(31, 42);
+  display.print("A");
+  display.setCursor(71, 28);
+  display.print("V");
+  display.setCursor(71, 42);
+  display.print("A");
+  display.setCursor(20, 60);
+  display.print("%");
+  display.setCursor(70, 60);
+  display.print("W");
+  // pg
+  update_powergood_display(true);
+}
+
 void setup()
 {
   Serial.begin(SERIAL_BAUDRATE);
@@ -147,41 +194,8 @@ void setup()
     //display.setTextColor(SSD1306_WHITE); // Draw white text
     display.cp437(true);         // Use full 256 char 'Code Page 437' font
     //display.setRotation(2);      // rotate screen
-    display.fillScreen(SSD1306_BLACK);
     // fixed content
-    // header
-    display.fillRect(0, 0, 80, 16, SSD1306_WHITE);
-    // vlines
-    display.drawFastVLine(0, 0, 64, SSD1306_WHITE);
-    display.drawFastVLine(40, 0, 16, SSD1306_BLACK);
-    display.drawFastVLine(40, 16, 31, SSD1306_WHITE);
-    display.drawFastVLine(80, 0, 64, SSD1306_WHITE);
-    // hlines
-    display.drawFastHLine(0, 47, 80, SSD1306_WHITE);
-    display.drawFastHLine(0, 63, 80, SSD1306_WHITE);
-    // header text
-    display.setTextColor(SSD1306_BLACK);
-    display.setFont(&DEFAULT_FONT);
-    display.setCursor(12, 12);     // Start at top-left corner
-    display.print("AC");
-    display.setCursor(52, 12);
-    display.print("DC");
-    // unit
-    display.setTextColor(SSD1306_WHITE);
-    display.setCursor(31, 28);
-    display.print("V");
-    display.setCursor(31, 42);
-    display.print("A");
-    display.setCursor(71, 28);
-    display.print("V");
-    display.setCursor(71, 42);
-    display.print("A");
-    display.setCursor(20, 60);
-    display.print("%");
-    display.setCursor(70, 60);
-    display.print("W");
-    // pg
-    update_powergood_display(true);
+    draw_fixed_content();
   }
   // initialize digital pin LED_BUILTIN as an output.
   pinMode(LED_BUILTIN, OUTPUT);
@@ -379,8 +393,28 @@ void loop()
     }
     // Fan anim
     update_oled_animation_frame();
-      
+
     display.display();
+
+#ifdef PREVENT_OLED_BURNIN
+    display_invert_timer += animation_update_intervals[animation_update_interval_idx];
+    if (data_update_timer == 0 && display_invert_timer >= PREVENT_OLED_BURNIN_PERIOD)
+    {
+      // DATA_UPDATE_INTERVAL is 500
+      for (int i = 1; i <= 10; i++)
+      {
+        display.fillRect(0, 0, 13*i, 64, SSD1306_WHITE);
+        display.display();
+        delay(50);
+      }
+      display_invert_timer = 0;
+      display_inverted = !display_inverted;
+      display.invertDisplay(display_inverted);
+      draw_fixed_content();
+      display.display();
+      return;
+    }
+#endif
   }
   
   float delay_ms = animation_update_intervals[animation_update_interval_idx] - (float)(millis() - timeBegin);
